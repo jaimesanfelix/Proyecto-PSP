@@ -12,19 +12,24 @@ public class ClienteSocket {
         ObjectInputStream entrada;
         ObjectOutputStream eixida;
         String frase;
+        String FraseRecibida;
 
         socket = new Socket(DNSAWS, 11000);
-        eixida = new ObjectOutputStream(socket.getOutputStream());
-
-        System.out.println("Introduce la frase a enviar en minúsculas");
+        
+        do {
+            eixida = new ObjectOutputStream(socket.getOutputStream());
+            System.out.println("Introduce la frase a enviar en minúsculas");
         Scanner in = new Scanner(System.in);
         frase = in.nextLine();
         System.out.println("Se envia la frase " + frase);
         eixida.writeObject(frase);
 
         entrada = new ObjectInputStream(socket.getInputStream());
+        FraseRecibida = (String) entrada.readObject();
         System.out.println(
-                "La frase recibida es: " + (String) entrada.readObject());
+                "La frase recibida es: " + FraseRecibida);
+        } while (!frase.equalsIgnoreCase("exit"));
+        
         socket.close();
     }
 }
