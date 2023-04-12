@@ -17,10 +17,12 @@ public class ServidorSocket {
         while (true) {
             clientSocket = serverSocket.accept();
             listaClientes.add(clientSocket);
-            new Worker(clientSocket, listaClientes);
+            Worker w = new Worker(clientSocket, listaClientes);
+            w.start();
 
             
             System.out.println("Server esperando una nueva conexión...");
         }
+        
     }
 }
