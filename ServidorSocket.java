@@ -1,33 +1,28 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class ServidorSocket {
     
     private static final int PORT=11000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        String FraseClient;
-        String FraseMajuscules;
+
         ServerSocket serverSocket;
         Socket clientSocket;
-        ObjectInputStream entrada;
-        ObjectOutputStream eixida;
+        ArrayList<Socket> listaClientes = new ArrayList<>();
+        
         serverSocket = new ServerSocket(PORT);
         System.out.println("Server iniciado y escuchando en el puerto "+ PORT);
         while (true) {
             clientSocket = serverSocket.accept();
-            entrada = new ObjectInputStream(clientSocket.getInputStream());
-            FraseClient = (String) entrada.readObject();
+            listaClientes.add(clientSocket);
+            Worker w = new Worker(clientSocket, listaClientes);
+            w.start();
 
-            System.out.println("La frase recibida es: " + FraseClient);
-
-            eixida = new ObjectOutputStream(clientSocket.getOutputStream());
-            FraseMajuscules = FraseClient.toUpperCase();
-            System.out.println("El server devuelve la frase: " + FraseMajuscules);
-            eixida.writeObject(FraseMajuscules);
-
-            clientSocket.close();
+            
             System.out.println("Server esperando una nueva conexión...");
         }
+        
     }
 }
