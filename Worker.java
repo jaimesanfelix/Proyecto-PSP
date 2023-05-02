@@ -2,7 +2,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.Key;
 import java.util.ArrayList;
+
+import utils.KeysManager;
+import utils.RSAReceiver;
+import utils.RSASender;
 
 public class Worker extends Thread {
 
@@ -11,17 +16,19 @@ public class Worker extends Thread {
         ObjectInputStream entrada;
         ObjectOutputStream salida;
         String usuario;
+        Key clavePrivada;
 
         public Worker() {
 
         }
 
-        public Worker(Socket socketCliente, ArrayList<Socket> listaClientes) throws ClassNotFoundException, IOException {
+        public Worker(Socket socketCliente, ArrayList<Socket> listaClientes) throws Exception {
                 this.socketCliente = socketCliente;
                 this.listaClientes = listaClientes;
+                this.clavePrivada = KeysManager.getClavePrivada();
         }
 
-        private void contestar(String fraseCliente) throws IOException {
+        private void contestar(String fraseCliente) throws Exception {
 
                 String fraseMayusculas;
 
@@ -33,11 +40,11 @@ public class Worker extends Thread {
                 }
                 fraseMayusculas = "\t" + fraseCliente.toUpperCase() + "<" + usuario;
                 System.out.println(fraseMayusculas);
-                salida.writeObject(fraseMayusculas);
+                salida.writeObject(RSASender.cipher(fraseMayusculas, clavePrivada));
 
         }
 
-        private void contestarTodos(String fraseCliente) throws IOException {
+        private void contestarTodos(String fraseCliente) throws Exception {
 
                 String fraseMayusculas = "";
                 fraseMayusculas = usuario + "> " + fraseCliente;
@@ -56,7 +63,7 @@ public class Worker extends Thread {
                                 fraseMayusculas = "\t" + fraseCliente.toUpperCase() + " <" + usuario;
                         }
                         
-                        salida.writeObject(fraseMayusculas);
+                        salida.writeObject(RSASender.cipher(fraseMayusculas, clavePrivada));
                 }
                 
 
@@ -68,8 +75,11 @@ public class Worker extends Thread {
 
                 try {
                         entrada = new ObjectInputStream(socketCliente.getInputStream());
-                        usuario = (String) entrada.readObject();
+                        usuario = new String(RSAReceiver.decipher((byte[])entrada.readObject(), clavePrivada));
                 } catch (IOException | ClassNotFoundException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                } catch (Exception e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                 }
@@ -77,7 +87,7 @@ public class Worker extends Thread {
 
                 do {
                         try {
-                                fraseCliente = (String) entrada.readObject();
+                                fraseCliente = new String(RSAReceiver.decipher((byte[])entrada.readObject(), clavePrivada));
                                 if (fraseCliente.contains("exit")) {
                                         contestar(fraseCliente);
                                 } else {
@@ -85,6 +95,9 @@ public class Worker extends Thread {
                                 }
 
                         } catch (IOException | ClassNotFoundException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                        } catch (Exception e) {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
                         }
