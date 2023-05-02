@@ -8,9 +8,8 @@ import utils.RSASender;
 
 public class ClienteSocket {
 
-    // private static final String DNSAWS =
-    // "ec2-3-237-199-99.compute-1.amazonaws.com";
-    private static final String DNSAWS = "localhost";
+    private static final String DNSAWS = "ec2-3-237-199-99.compute-1.amazonaws.com";
+    //private static final String DNSAWS = "localhost";
 
     public static void main(String[] args) throws Exception {
         Socket socket;
