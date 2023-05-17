@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ServidorSocket {
     
@@ -10,14 +11,14 @@ public class ServidorSocket {
 
         ServerSocket serverSocket;
         Socket clientSocket;
-        ArrayList<Socket> listaClientes = new ArrayList<>();
+        HashMap<Socket, String> listaClientes = new HashMap<>();
         
         serverSocket = new ServerSocket(PORT);
         System.out.println("Server iniciado y escuchando en el puerto "+ PORT);
         System.out.println("Server esperando clientes...");
         while (true) {
             clientSocket = serverSocket.accept();
-            listaClientes.add(clientSocket);
+            listaClientes.put(clientSocket, null);
             Worker w = new Worker(clientSocket, listaClientes);
             w.start();
             

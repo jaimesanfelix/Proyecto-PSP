@@ -4,6 +4,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.security.Key;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import utils.KeysManager;
 import utils.RSAReceiver;
@@ -12,7 +13,7 @@ import utils.RSASender;
 public class Worker extends Thread {
 
         Socket socketCliente;
-        ArrayList<Socket> listaClientes;
+        HashMap<Socket, String> listaClientes;
         ObjectInputStream entrada;
         ObjectOutputStream salida;
         String usuario;
@@ -22,7 +23,7 @@ public class Worker extends Thread {
 
         }
 
-        public Worker(Socket socketCliente, ArrayList<Socket> listaClientes) throws Exception {
+        public Worker(Socket socketCliente, HashMap<Socket, String> listaClientes) throws Exception {
                 this.socketCliente = socketCliente;
                 this.listaClientes = listaClientes;
                 this.clavePrivada = KeysManager.getClavePrivada();
@@ -30,7 +31,7 @@ public class Worker extends Thread {
 
         private void contestar(String fraseCliente) throws Exception {
 
-                String fraseMayusculas;
+                String fraseAEnviar;
 
                 try {
                         salida = new ObjectOutputStream(socketCliente.getOutputStream());
@@ -38,36 +39,67 @@ public class Worker extends Thread {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                 }
-                fraseMayusculas = "\t" + fraseCliente.toUpperCase() + "<" + usuario;
-                System.out.println(fraseMayusculas);
-                salida.writeObject(RSASender.cipher(fraseMayusculas, clavePrivada));
+                fraseAEnviar = "\t" + fraseCliente + "<" + usuario;
+                System.out.println(fraseAEnviar);
+                salida.writeObject(RSASender.cipher(fraseAEnviar, clavePrivada));
 
         }
 
         private void contestarTodos(String fraseCliente) throws Exception {
 
-                String fraseMayusculas = "";
-                fraseMayusculas = usuario + "> " + fraseCliente;
-                System.out.println(fraseMayusculas);
+                String fraseAEnviar = "";
+                fraseAEnviar = usuario + "> " + fraseCliente;
+                System.out.println(fraseAEnviar);
 
-                for (int i = 0; i < listaClientes.size(); i++) {
+                //for (int i = 0; i < listaClientes.len(); i++) {
+                for(Socket cliente:listaClientes.keySet()) {
                         try {
-                                salida = new ObjectOutputStream(listaClientes.get(i).getOutputStream());
+                                salida = new ObjectOutputStream(cliente.getOutputStream());
                         } catch (IOException e) {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
                         }
-                        if (listaClientes.get(i) != socketCliente) {
-                                fraseMayusculas = "\n\t" + fraseCliente.toUpperCase() + " <" + usuario;
+                        if (cliente != socketCliente) {
+                                fraseAEnviar = "\n\t" + fraseCliente + " <" + usuario;
                         }else{
-                                fraseMayusculas = "\t" + fraseCliente.toUpperCase() + " <" + usuario;
+                                fraseAEnviar = "\t" + fraseCliente + " <" + usuario;
                         }
                         
-                        salida.writeObject(RSASender.cipher(fraseMayusculas, clavePrivada));
-                }
-                
+                        salida.writeObject(RSASender.cipher(fraseAEnviar, clavePrivada));
+                }                
 
         }
+
+
+        private void contestarUsuario(String usuario, String fraseCliente) throws Exception {
+
+                String fraseAEnviar;
+                Socket socketUsuario = null;
+
+                String u1 = usuario.substring(0, 1).toUpperCase();
+                usuario = u1 + usuario.substring(1);
+                for(Socket cliente:listaClientes.keySet()) {
+                     if (listaClientes.get(cliente).equals(usuario)) {
+                        socketUsuario = cliente;
+                     }   
+                }
+                if (socketUsuario == null) {
+                        contestar("El usuario " + usuario + " no existe");
+                        return;
+                }
+
+                try {
+                        salida = new ObjectOutputStream(socketUsuario.getOutputStream());
+                } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                }
+                fraseAEnviar = "\t" + fraseCliente + "<" + usuario;
+                System.out.println(fraseAEnviar);
+                salida.writeObject(RSASender.cipher(fraseAEnviar, clavePrivada));
+
+        }
+
 
         @Override
         public void run() {
@@ -76,6 +108,7 @@ public class Worker extends Thread {
                 try {
                         entrada = new ObjectInputStream(socketCliente.getInputStream());
                         usuario = new String(RSAReceiver.decipher((byte[])entrada.readObject(), clavePrivada));
+                        listaClientes.put(socketCliente, usuario);
                 } catch (IOException | ClassNotFoundException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -88,7 +121,9 @@ public class Worker extends Thread {
                 do {
                         try {
                                 fraseCliente = new String(RSAReceiver.decipher((byte[])entrada.readObject(), clavePrivada));
-                                if (fraseCliente.contains("exit")) {
+                                if (fraseCliente.startsWith("!") || fraseCliente.startsWith("@")) {
+                                        ejecutarComandos(fraseCliente);
+                                } else if (fraseCliente.contains("exit")) {
                                         contestar(fraseCliente);
                                 } else {
                                         contestarTodos(fraseCliente);
@@ -110,6 +145,22 @@ public class Worker extends Thread {
                 } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
+                }
+
+        }
+
+        private void ejecutarComandos(String comando) throws Exception{
+
+                String mensaje;
+                //Eliminamos los espacios al inicio y al final de la frase
+                comando = comando.trim();
+                if (comando.startsWith("!ping")) {
+                        mensaje = comando.substring(comando.indexOf(" ") + 1);
+                        contestarTodos("**" + mensaje.toUpperCase() + "**");
+                }else if (comando.startsWith("@")) {
+                        String user = comando.substring(1, comando.indexOf(" "));
+                        mensaje = comando.substring(comando.indexOf(" "));
+                        contestarUsuario(user, mensaje);
                 }
 
         }
