@@ -3,6 +3,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.security.Key;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -18,6 +19,7 @@ public class Worker extends Thread {
         ObjectOutputStream salida;
         String usuario;
         Key clavePrivada;
+        Timestamp tiempoUsuario;
 
         public Worker() {
 
@@ -27,6 +29,7 @@ public class Worker extends Thread {
                 this.socketCliente = socketCliente;
                 this.listaClientes = listaClientes;
                 this.clavePrivada = KeysManager.getClavePrivada();
+                this.tiempoUsuario = new Timestamp(System.currentTimeMillis());
         }
 
         private void contestar(String fraseCliente) throws Exception {
@@ -131,7 +134,8 @@ public class Worker extends Thread {
 
                         } catch (IOException | ClassNotFoundException e) {
                                 // TODO Auto-generated catch block
-                                e.printStackTrace();
+                                System.out.println("El usuario " + usuario + " ha sido eliminado");
+                                return;
                         } catch (Exception e) {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
@@ -161,6 +165,41 @@ public class Worker extends Thread {
                         String user = comando.substring(1, comando.indexOf(" "));
                         mensaje = comando.substring(comando.indexOf(" "));
                         contestarUsuario(user, mensaje);
+                }else if(comando.startsWith("!userList")){
+                        mensaje = "";
+                        for(Socket cliente:listaClientes.keySet()) {
+                                mensaje += listaClientes.get(cliente) + ", ";
+
+                           }
+                        contestar(mensaje);
+                }else if(comando.startsWith("!deleteUser")){
+                        Socket socketUsuario = null;
+                        String user = comando.substring(comando.indexOf(" ") + 1);
+                        System.out.println("-" + user + "-");
+                        for(Socket cliente:listaClientes.keySet()) {
+                                if (listaClientes.get(cliente).equals(user)) {
+                                   socketUsuario = cliente;
+                                   System.out.println("-" + listaClientes.get(cliente) + "-");
+                                }   
+                           }
+                           if (socketUsuario == null) {
+                                   contestar("El usuario " + user + " no existe");          
+                           }else{
+                                contestarUsuario(user, "exit");
+                                listaClientes.remove(socketUsuario);
+                           }
+           
+                }else if(comando.startsWith("!userTime")){
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                        mensaje = "Llevas conectado " + (timestamp.getTime() - tiempoUsuario.getTime()) / 1000.0 + " segundos";
+                        contestar(mensaje);
+                }else if(comando.startsWith("!serverTime")){   
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                        mensaje = "El servidor lleva activo " + (timestamp.getTime() - ServidorSocket.tiempoServidor.getTime()) / 1000.0 + " segundos";
+                        contestar(mensaje);
+                }else {
+                        mensaje = "El comando " + comando + " es desconocido";
+                        contestar(mensaje);
                 }
 
         }

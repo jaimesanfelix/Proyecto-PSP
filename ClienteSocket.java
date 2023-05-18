@@ -33,7 +33,6 @@ public class ClienteSocket {
         System.out.print(nombreUsuario + "> ");
 
         do {
-            
             frase = sc.nextLine();
             //System.out.println(nombreUsuario + ">" + frase);
             salida.writeObject(RSASender.cipher(frase, clavePublica));

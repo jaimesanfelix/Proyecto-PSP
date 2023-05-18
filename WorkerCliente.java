@@ -40,9 +40,10 @@ public class WorkerCliente extends Thread {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        } while (!fraseRecibida.contains("EXIT"));
+        } while (!fraseRecibida.contains("exit"));
         try {
             socket.close();
+            System.exit(0);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
