@@ -55,7 +55,6 @@ public class Worker extends Thread {
                 fraseAEnviar = usuario + "> " + fraseCliente;
                 System.out.println(fraseAEnviar);
 
-                //for (int i = 0; i < listaClientes.len(); i++) {
                 for(Socket cliente:listaClientes.keySet()) {
                         try {
                                 salida = new ObjectOutputStream(cliente.getOutputStream());
