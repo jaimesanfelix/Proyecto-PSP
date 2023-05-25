@@ -28,6 +28,8 @@ public class ClienteSocket {
         String nombreUsuario = u1 + usuario.substring(1);
         salida.writeObject(RSASender.cipher(nombreUsuario, clavePublica));
         
+        System.out.println("Para consultar los comando introduce el comando: !listaComandos");
+
         WorkerCliente wc = new WorkerCliente(socket, nombreUsuario);
         wc.start();
         System.out.print(nombreUsuario + "> ");

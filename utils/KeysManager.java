@@ -17,8 +17,8 @@ public class KeysManager {
     //private static final String FICHERO_CLAVE_PUBLICA = "Proyecto-PSP/utils/public.key";
     //private static final String FICHERO_CLAVE_PRIVADA = "Proyecto-PSP/utils/private.key";
 
-    private static final String FICHERO_CLAVE_PUBLICA = "utils/public.key";
-    private static final String FICHERO_CLAVE_PRIVADA = "utils/private.key";
+    private static final String FICHERO_CLAVE_PUBLICA = "Proyecto-PSP/utils/public.key";
+    private static final String FICHERO_CLAVE_PRIVADA = "Proyecto-PSP/utils/private.key";
 
     public static KeyPair generarClaves() throws NoSuchAlgorithmException {
         KeyPairGenerator generador = KeyPairGenerator.getInstance("RSA");

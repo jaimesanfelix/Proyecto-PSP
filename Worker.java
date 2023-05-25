@@ -20,6 +20,7 @@ public class Worker extends Thread {
         String usuario;
         Key clavePrivada;
         Timestamp tiempoUsuario;
+        String[] listaComandos = {"!ping", "@user", "!userList", "!deleteUser", "!userTime", "!serverTime", "!listaComandos"};
 
         public Worker() {
 
@@ -169,9 +170,8 @@ public class Worker extends Thread {
                         mensaje = "";
                         for(Socket cliente:listaClientes.keySet()) {
                                 mensaje += listaClientes.get(cliente) + ", ";
-
                            }
-                        contestar(mensaje);
+                        contestar(mensaje.substring(0, mensaje.length() - 2));
                 }else if(comando.startsWith("!deleteUser")){
                         Socket socketUsuario = null;
                         String user = comando.substring(comando.indexOf(" ") + 1);
@@ -185,6 +185,7 @@ public class Worker extends Thread {
                            if (socketUsuario == null) {
                                    contestar("El usuario " + user + " no existe");          
                            }else{
+                                contestarTodos("El usuario " + user + " va a ser eliminado");
                                 contestarUsuario(user, "exit");
                                 listaClientes.remove(socketUsuario);
                            }
@@ -197,6 +198,12 @@ public class Worker extends Thread {
                         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                         mensaje = "El servidor lleva activo " + (timestamp.getTime() - ServidorSocket.tiempoServidor.getTime()) / 1000.0 + " segundos";
                         contestar(mensaje);
+                }else if(comando.startsWith("!listaComandos")){
+                        String listaAEnviar = "";   
+                        for (int i = 0; i < listaComandos.length; i++) {
+                                listaAEnviar += listaComandos[i] + ", ";
+                        }
+                        contestar(listaAEnviar.substring(0, listaAEnviar.length() - 2));
                 }else {
                         mensaje = "El comando " + comando + " es desconocido";
                         contestar(mensaje);
