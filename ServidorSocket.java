@@ -24,8 +24,6 @@ public class ServidorSocket {
             listaClientes.put(clientSocket, null);
             Worker w = new Worker(clientSocket, listaClientes);
             w.start();
-            
-           
         }
         
     }
